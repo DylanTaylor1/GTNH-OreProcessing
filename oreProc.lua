@@ -1,9 +1,8 @@
 local component = require('component')
-local serialization = require('serialization')
 local sides = require('sides')
+local oreList = require('oreList')
 local transposers = {}
 local transposerSides = {}
-local filterTable = {}
 local orientation = 'West'
 local targetInv
 
@@ -12,15 +11,6 @@ local targetInv
 local function findTransposers()
     for address in component.list('transposer') do
         table.insert(transposers, component.proxy(component.get(address)))
-    end
-end
-
-
-local function loadFilters()
-    local file = io.open('/home/oreFilters', 'r')
-    if file then
-        filterTable = serialization.unserialize(file:read('*a')) or {}
-        file:close()
     end
 end
 
@@ -102,7 +92,7 @@ end
 
 
 local function searchFilter(keyword)
-    for ID, entry in pairs(filterTable) do
+    for ID, entry in pairs(oreList) do
         if entry.name == keyword then
             return ID
         end
@@ -117,8 +107,9 @@ local function checkDatabase()
     local item, _ = table.unpack(checkInventory(0))
 
     -- If Item is Present and in Filter
-    if item and searchFilter(item.label) then
-        return filterTable[searchFilter(item.label)].filter
+    local F = searchFilter(item.label)
+    if item and F then
+        return oreList[F].filter
     elseif item then
         print(string.format('No Filter: %s', item.label))
         return 8
@@ -141,7 +132,6 @@ end
 local function init()
     findTransposers()
     setSides()
-    loadFilters()
 end
 
 
